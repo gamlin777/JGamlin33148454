@@ -41,7 +41,7 @@ public:
     // to have "1" in the w, distances to have "0" in the w.
     center_ = vec4(cx, cy, 0, 1);
     half_extents_ = vec4(hx, hy, 0, 0);
-    color_ = vec4(1, 0, 0, 1);
+    color_ = vec4(1, 1, 1, 1);
   }
 
   // draw the box using a triangle fan.
@@ -137,20 +137,19 @@ class NewPongGame
   
   void move_bats() {
     // look at the keys and move the bats
-	vec4 bat0_pos = bats[0].pos();
+	float bat1_pos = bats[1].pos()[1];  // Bat positions recorded
+	float bat0_pos = bats[0].pos()[1];
 	vec4 bat_up(0, 0.02f, 0, 0);
-    if (keys['w']) {					// MAKE BATS UNABLE TO MOVE PAST SCREEN BOUNDARIES
+    if (keys['w'] && bat0_pos < 1) {	// test for key and paddle within viewport
 		bats[0].move(bat_up);
-		printf("\n\n%d", bat0_pos);
-	}
-	if (keys['s']) {
-		bats[0].move(-bat_up);
-		printf("\n\n%d", bat0_pos);
 		}
-	if (keys['o']) {
+	if (keys['s'] && bat0_pos > -1) {
+		bats[0].move(-bat_up);
+		}
+	if (keys['o'] && bat1_pos < 1) {
 		bats[1].move(bat_up);
 		}
-	if (keys['l']) {
+	if (keys['l'] && bat1_pos > -1) {
 		bats[1].move(-bat_up);
 		}
   }
@@ -189,6 +188,7 @@ class NewPongGame
       ball_velocity[1] < 0 && new_pos[1] <- court_size()
     ) {
       ball_velocity = ball_velocity * vec4(1, -1, 1, 1);
+	  printf("\7");
     }
 
     // note we don't just simply reverse the ball...
@@ -197,22 +197,27 @@ class NewPongGame
       // right to left
       if (new_pos[0] > 1) { // Greater than x1
         adjust_score(0);
+		printf("\7\7");
       }
       if (ball.intersects(bats[1]) ) {
         ball_velocity = ball_velocity * vec4(-1, 1, 1, 1);
+		printf("\7");
       }
     } else {
       // left to right
       if (new_pos[0] < -1) { // Less than x-1
         adjust_score(1);
+		printf("\7\7");
       }
       if (ball.intersects(bats[0]) ) {
         ball_velocity = ball_velocity * vec4(-1, 1, 1, 1);
+		printf("\7");
       }
     }
 	 // bounces on center obstacle
-	if (ball.intersects(obstacle) ) {
+	if (ball.intersects(obstacle)) {
 		ball_velocity = ball_velocity * vec4(-1, 1, 1, 1);
+		printf("\7");
 	}
   }
 
