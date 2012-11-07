@@ -34,6 +34,7 @@ class box {
   vec4 center_;
   vec4 half_extents_;
   vec4 color_;
+ 
 public:
   // we don't have a constructor, but we do have an 'init' function
   void init(float cx, float cy, float hx, float hy) {
@@ -67,7 +68,7 @@ public:
   void move(const vec4 &dir) {
     center_ += dir;
   }
-  
+
   // the 'pos' property
   vec4 pos() const { return center_; }
   void set_pos(vec4 v) { center_ = v; }
@@ -78,6 +79,7 @@ public:
     vec4 min_distance = rhs.half_extents_ + half_extents_;
     return diff[0] < min_distance[0] && diff[1] < min_distance[1];
   }
+
 };
 
 // the game
@@ -140,6 +142,7 @@ class NewPongGame
 	float bat1_pos = bats[1].pos()[1];  // Bat positions recorded
 	float bat0_pos = bats[0].pos()[1];
 	vec4 bat_up(0, 0.02f, 0, 0);
+
     if (keys['w'] && bat0_pos < 1) {	// test for key and paddle within viewport
 		bats[0].move(bat_up);
 		}
@@ -152,6 +155,17 @@ class NewPongGame
 	if (keys['l'] && bat1_pos > -1) {
 		bats[1].move(-bat_up);
 		}
+
+	// Opponent AI
+	float ball_pos = ball.pos()[1];
+	vec4 bat_ai(0, 0.009f, 0, 0);
+
+	if (ball_pos >= bat1_pos) {
+		bats[1].move(bat_ai);
+	}
+	if (ball_pos <= bat1_pos) {
+		bats[1].move(-bat_ai);
+	}
   }
   
   // called when someone scores
@@ -168,8 +182,8 @@ class NewPongGame
   
   void do_serving() {
     // while serving, glue the ball to the server's bat
-    vec4 offset = vec4(server ? -0.1f : 0.1f, 0, 0, 0);
-    ball.set_pos(bats[server].pos() + offset);
+    vec4 s_offset = vec4(server ? -0.1f : 0.1f, 0, 0, 0);
+    ball.set_pos(bats[server].pos() + s_offset);
     if (keys[' ']) {
       state = state_playing;
       ball_velocity = vec4(server ? -ball_speed() : ball_speed(), -ball_speed(), 0, 0);
@@ -199,7 +213,7 @@ class NewPongGame
         adjust_score(0);
 		printf("\7\7");
       }
-      if (ball.intersects(bats[1]) ) {
+      if (ball.intersects(bats[1])) {
         ball_velocity = ball_velocity * vec4(-1, 1, 1, 1);
 		printf("\7");
       }
@@ -209,18 +223,17 @@ class NewPongGame
         adjust_score(1);
 		printf("\7\7");
       }
-      if (ball.intersects(bats[0]) ) {
+      if (ball.intersects(bats[0])) {
         ball_velocity = ball_velocity * vec4(-1, 1, 1, 1);
 		printf("\7");
       }
     }
 	 // bounces on center obstacle
-	if (ball.intersects(obstacle)) {
+	if (ball.intersects(obstacle)) {  
 		ball_velocity = ball_velocity * vec4(-1, 1, 1, 1);
 		printf("\7");
 	}
   }
-
 
   // simulation for the game
   void simulate() {
@@ -266,11 +279,11 @@ class NewPongGame
     float bat_cx = 1 - bat_hx * 2;
     bats[0].init(-bat_cx, 0, bat_hx, bat_hy);
     bats[1].init( bat_cx, 0, bat_hx, bat_hy);
-    float ball_hx = 0.03f;
-    float ball_hy = 0.03f;
+    float ball_hx = 0.02f;
+    float ball_hy = 0.02f;
     ball.init(0, 0, ball_hx, ball_hy);
 
-	//make the obstacle										//center obstacle detail
+	//make the obstacle										//center obstacle details
 	float obstacle_hx = 0.05f;
 	float obstacle_hy = 0.5f;
 	float obstacle_cx = 1.0f;
