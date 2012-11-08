@@ -72,6 +72,13 @@ public:
   // the 'pos' property
   vec4 pos() const { return center_; }
   void set_pos(vec4 v) { center_ = v; }
+
+  // the 'sides' property
+  float r_side() const {return center_[0] + half_extents_[0];}
+  float l_side() const {return center_[0] - half_extents_[0];}
+  float t_side() const {return center_[1] + half_extents_[1];}
+  float b_side() const {return center_[1] - half_extents_[1];}
+
   
   // return true if two boxes intersect
   bool intersects(const box &rhs) {
@@ -202,7 +209,6 @@ class NewPongGame
       ball_velocity[1] < 0 && new_pos[1] <- court_size()
     ) {
       ball_velocity = ball_velocity * vec4(1, -1, 1, 1);
-	  printf("\7");
     }
 
     // note we don't just simply reverse the ball...
@@ -211,27 +217,41 @@ class NewPongGame
       // right to left
       if (new_pos[0] > 1) { // Greater than x1
         adjust_score(0);
-		printf("\7\7");
       }
       if (ball.intersects(bats[1])) {
         ball_velocity = ball_velocity * vec4(-1, 1, 1, 1);
-		printf("\7");
       }
     } else {
       // left to right
       if (new_pos[0] < -1) { // Less than x-1
         adjust_score(1);
-		printf("\7\7");
       }
       if (ball.intersects(bats[0])) {
         ball_velocity = ball_velocity * vec4(-1, 1, 1, 1);
-		printf("\7");
       }
     }
 	 // bounces on center obstacle
-	if (ball.intersects(obstacle)) {  
-		ball_velocity = ball_velocity * vec4(-1, 1, 1, 1);
-		printf("\7");
+	printf("%f...", ball.b_side());
+	printf("%f\n", obstacle.t_side());
+	
+	
+	if (ball.intersects(obstacle)) { 
+		if (obstacle.t_side() >= ball.b_side() && ball.pos()[1] >= obstacle.t_side()) {
+			ball_velocity = ball_velocity * vec4(1, -1, 1, 1);
+			printf("Done! TOP ");
+		}
+		else if (obstacle.b_side() <= ball.t_side() && ball.pos()[1] <= obstacle.b_side()) {
+			ball_velocity = ball_velocity * vec4(1, -1, 1, 1);
+			printf("Done! BOTTOM ");
+		}
+		else if (obstacle.l_side() <= ball.r_side() && ball.pos()[0] <= obstacle.l_side()) {
+			ball_velocity = ball_velocity * vec4(-1, 1, -1, -1);
+			printf("Done! LEFT ");
+		}
+		else if (obstacle.r_side() >= ball.l_side()) {
+			ball_velocity = ball_velocity * vec4(-1, 1, -1, -1);
+			printf("Done! RIGHT ");
+		}
 	}
   }
 
@@ -286,8 +306,7 @@ class NewPongGame
 	//make the obstacle										//center obstacle details
 	float obstacle_hx = 0.05f;
 	float obstacle_hy = 0.5f;
-	float obstacle_cx = 1.0f;
-	obstacle.init(0,0,obstacle_hx,obstacle_hy);
+	obstacle.init(0.0f, -0.4f, obstacle_hx,obstacle_hy);
     
     // set up a simple shader to render the emissve color
     colour_shader_.init(
@@ -349,4 +368,3 @@ int main(int argc, char **argv)
   glutMainLoop();
   return 0;
 }
-
