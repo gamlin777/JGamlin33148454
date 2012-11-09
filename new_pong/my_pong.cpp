@@ -204,9 +204,12 @@ class NewPongGame
 	// while serving, glue the ball to the server's bat
     vec4 s_offset = vec4(server ? -0.1f : 0.1f, 0, 0, 0);
     ball.set_pos(bats[server].pos() + s_offset);
-    if (keys[' ']) {
-      state = state_playing;
-      ball_velocity = vec4(server ? -ball_speed() : ball_speed(), -ball_speed() * random_n, 0, 0);
+    if (keys[' '] && server == 0) {
+		state = state_playing;
+		ball_velocity = vec4(ball_speed(), -ball_speed() * random_n, 0, 0);
+	} else if (server == 1) {
+		state = state_playing;
+		ball_velocity = vec4(-ball_speed(), -ball_speed() * random_n, 0, 0);
     }
   }
 
