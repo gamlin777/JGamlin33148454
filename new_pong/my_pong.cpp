@@ -29,19 +29,21 @@
 // shader wrapper
 #include "include/shader.h"
 
-// randomizer
+// random number generation
 #include <ctime>
 #include <cstdlib>
 
-  bool* key_special_states = new bool[246];
-  bool* key_states = new bool[256];
+
+// Arrow Key Setup
+bool* key_special_states = new bool[246];
+bool* key_states = new bool[256];
   
-  void keySpecial (int key, int x, int y) {  
+void keySpecial (int key, int x, int y) {  
 	key_special_states[key] = true;
-  }
-  void keySpecialUp (int key, int x, int y) {   
+}
+void keySpecialUp (int key, int x, int y) {   
 	key_special_states[key] = false;
-  }
+}
 
 // box class - holds shape and color of a box on the screen.
 class box {
@@ -102,8 +104,8 @@ public:
   }
 
 };
-float ball_speed = 0.01f;
-// the game
+
+			// THE GAME
 class NewPongGame
 {
   // game state: always uses enums for int constants
@@ -135,6 +137,7 @@ class NewPongGame
   // constants: always use functions for floats!
   
   float court_size() { return 0.98f; }                    //court height
+  float ball_speed() { return 0.01f; }
 
   void draw_world(shader &shader)
   {
@@ -214,10 +217,10 @@ class NewPongGame
     ball.set_pos(bats[server].pos() + s_offset);
     if (keys[' '] && server == 0) {
 		state = state_playing;
-		ball_velocity = vec4(ball_speed, -ball_speed * random_n, 0, 0);
+		ball_velocity = vec4(ball_speed(), -ball_speed() * random_n, 0, 0);
 	} else if (server == 1) {
 		state = state_playing;
-		ball_velocity = vec4(-ball_speed, -ball_speed * random_n, 0, 0);
+		ball_velocity = vec4(-ball_speed(), -ball_speed() * random_n, 0, 0);
     }
   }
 
@@ -263,22 +266,22 @@ class NewPongGame
 		if (obstacle.t_side() >= ball.b_side() && ball.pos()[1] > obstacle.t_side()) {
 			ball_velocity = ball_velocity * vec4(1, -1, 1, 1);
 			++bounces;
-			printf("Collision 1: Obstacle top... %f\n", ball_speed);
+			printf("Collision 1: Obstacle top... %f\n", ball_speed());
 		}
 		else if (obstacle.b_side() <= ball.t_side() && ball.pos()[1] < obstacle.b_side()) {
 			ball_velocity = ball_velocity * vec4(1, -1, 1, 1);
 			++bounces;
-			printf("Collision 1: Obstacle bottom... %f\n", ball_speed);
+			printf("Collision 1: Obstacle bottom... %f\n", ball_speed());
 		}
 		else if (obstacle.l_side() <= ball.r_side() && ball.pos()[0] < obstacle.l_side() && ball.r_side() < obstacle.t_side() - 0.02f && ball.r_side() > obstacle.b_side() + 0.02f ) {
 			ball_velocity = ball_velocity * vec4(-1, 1, 1, 1);
 			++bounces;
-			printf("Collision 1: Obstacle left... %f\n", ball_speed);
+			printf("Collision 1: Obstacle left... %f\n", ball_speed());
 		}
 		else if (obstacle.r_side() >= ball.l_side() && ball.pos()[0] > obstacle.r_side() && ball.l_side() < obstacle.t_side() - 0.02f && ball.l_side() > obstacle.b_side() + 0.02f ) {
 			ball_velocity = ball_velocity * vec4(-1, 1, 1, 1);
 			++bounces;
-			printf("Collision 1: Obstacle right.... %f\n", ball_speed);
+			printf("Collision 1: Obstacle right.... %f\n", ball_speed());
 		}
 	}
 		
@@ -289,19 +292,19 @@ class NewPongGame
 		if (ball.intersects(obstacle)) { 
 			if (obstacle.t_side() - 0.03f <= ball.pos()[1] && ball.pos()[1] <= obstacle.t_side()) {
 				ball.move(yball_fix);
-				printf("Collision 2: Obstacle top/ball center... %f\n", ball_speed);
+				printf("Collision 2: Obstacle top/ball center... %f\n", ball_speed());
 			}
 			else if (obstacle.b_side() + 0.03f >= ball.pos()[1] && ball.pos()[1] >= obstacle.b_side()) {
 				ball.move(-yball_fix);
-				printf("Collision 2: Obstacle bottom/ball center... %f\n", ball_speed);
+				printf("Collision 2: Obstacle bottom/ball center... %f\n", ball_speed());
 			}
 			else if (obstacle.l_side() + 0.025f >= ball.pos()[0] && ball.pos()[0] >= obstacle.l_side()) {
 				ball.move(-xball_fix);
-				printf("Collision 2: Obstacle left/ball center... %f\n", ball_speed);
+				printf("Collision 2: Obstacle left/ball center... %f\n", ball_speed());
 			}
 			else if (obstacle.r_side() - 0.025f <= ball.pos()[0] && ball.pos()[0] <= obstacle.r_side()) {
 				ball.move(xball_fix);
-				printf("Collision 2: Obstacle right/ball center... %f\n", ball_speed);
+				printf("Collision 2: Obstacle right/ball center... %f\n", ball_speed());
 			}
 			
 			if (bounces > 2) {
@@ -412,6 +415,8 @@ int main(int argc, char **argv) // boilerplate to run the sample
   glutInitDisplayMode(GLUT_RGBA|GLUT_DEPTH|GLUT_DOUBLE);
   glutInitWindowSize(500, 500);
   glutCreateWindow("James Gamlin's Pong");
+
+  
   #ifdef WIN32
     glewInit();
     if (!glewIsSupported("GL_VERSION_2_0") )
@@ -428,5 +433,6 @@ int main(int argc, char **argv) // boilerplate to run the sample
   glutSpecialFunc(keySpecial);
   glutSpecialUpFunc(keySpecialUp);
   glutMainLoop();
+
   return 0;
 }
