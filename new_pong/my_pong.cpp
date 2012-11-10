@@ -270,12 +270,12 @@ class NewPongGame
 			++bounces;
 			printf("Collision 1: Obstacle bottom... %f\n", ball_speed);
 		}
-		else if (obstacle.l_side() <= ball.r_side() && ball.pos()[0] < obstacle.l_side()) {
+		else if (obstacle.l_side() <= ball.r_side() && ball.pos()[0] < obstacle.l_side() && ball.r_side() < obstacle.t_side() - 0.02f && ball.r_side() > obstacle.b_side() + 0.02f ) {
 			ball_velocity = ball_velocity * vec4(-1, 1, 1, 1);
 			++bounces;
 			printf("Collision 1: Obstacle left... %f\n", ball_speed);
 		}
-		else if (obstacle.r_side() >= ball.l_side() && ball.pos()[0] > obstacle.r_side()) {
+		else if (obstacle.r_side() >= ball.l_side() && ball.pos()[0] > obstacle.r_side() && ball.l_side() < obstacle.t_side() - 0.02f && ball.l_side() > obstacle.b_side() + 0.02f ) {
 			ball_velocity = ball_velocity * vec4(-1, 1, 1, 1);
 			++bounces;
 			printf("Collision 1: Obstacle right.... %f\n", ball_speed);
