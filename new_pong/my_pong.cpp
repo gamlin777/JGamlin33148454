@@ -48,6 +48,10 @@ void keySpecialUp (int key, int x, int y) {
 
 //Collision Test Setup
 bool collision_1_test;
+bool brick_dead[12] = {false};
+int brick_num = 12;
+vec4 brick_kill(0, 2.0f, 0, 0);
+bool brick_onscreen[12] = {true};
 
 // box class - holds shape and color of a box on the screen.
 class box {
@@ -154,7 +158,10 @@ class NewPongGame
       // draw the bat
       bats[player].draw(shader);
       obstacle.draw(shader);
-	  brick[12].draw(shader);
+	
+	  for (int i = 0; i <= brick_num; ++i) {
+		  brick[i].draw(shader);
+		  }
 
       box blob;								
       float blob_size = 0.02f;
@@ -181,16 +188,6 @@ class NewPongGame
 		bats[0].move(-bat_up);
 		}
 
-	// Opponent AI
-	bat_ai = vec4(0, 0.02f, 0, 0);
-
-	if (ball.pos()[1] >= bats[1].pos()[1]) {
-		bats[1].move(bat_ai);
-	}
-	if (ball.pos()[1] <= bats[1].pos()[1]) {
-		bats[1].move(-bat_ai);
-	}
-	 
 	// Move obstacle
   move_obstacle = vec4(0, 0.01f, 0, 0);
 
@@ -207,7 +204,7 @@ class NewPongGame
 		obstacle.move(move_obstacle);
 	}
   }
-  
+
   // called when someone scores
   void adjust_score(int player) {
     scores[player]++;
@@ -221,7 +218,7 @@ class NewPongGame
   }
   
   void do_serving() {
-    srand(static_cast<unsigned int>(time(0)));				//seed random number
+	srand(static_cast<unsigned int>(time(0)));				//seed random number
 	float random_n;
 	int lowest = -2;
 	int highest = 2;
@@ -233,7 +230,6 @@ class NewPongGame
 			random_n += 1.0f;
 		}
 	}
-
 
 	// while serving, glue the ball to the server's bat
     vec4 s_offset = vec4(server ? -0.1f : 0.1f, 0, 0, 0);
@@ -253,7 +249,7 @@ class NewPongGame
     vec4 new_pos = ball.pos() + ball_velocity;
     ball.set_pos(new_pos);
 
-   // Opponent AI
+   // Opponent AI (Keep)
 	bat_ai = vec4(0, 0.02f, 0, 0);
 
 	if (new_pos[1] >= bats[1].pos()[1]) {
@@ -277,6 +273,12 @@ class NewPongGame
       // right to left
       if (new_pos[0] > 1) {
         adjust_score(0);
+	for (int i = 0; i <= brick_num; ++i) {
+	 if (brick[i].pos()[1] > 1){
+		brick[i].move(-brick_kill);
+		brick_dead[i] = false;
+	  }
+    }
       }
       if (ball.intersects(bats[1])) {
 		ball_velocity = ball_velocity * vec4(-1.1f, 1.1f, 1, 1);
@@ -285,6 +287,12 @@ class NewPongGame
       // left to right
       if (new_pos[0] < -1) {
         adjust_score(1);
+	for (int i = 0; i <= brick_num; ++i) {
+	 if (brick[i].pos()[1] > 1){
+		brick[i].move(-brick_kill);
+		brick_dead[i] = false;
+	  }
+    }
       }
       if (ball.intersects(bats[0])) {
 		ball_velocity = ball_velocity * vec4(-1.1f, 1.1f, 1, 1);
@@ -340,28 +348,70 @@ class NewPongGame
 	vec4 yball_fix(0, 0.05f, 0, 0);
 
 		if (ball.intersects(obstacle) && collision_1_test == false) { 
-			if (obstacle.t_side() - 0.03f <= new_pos[1] && new_pos[1] <= obstacle.t_side()) {
+			if (obstacle.t_side() - 0.03f <= ball.pos()[1] && ball.pos()[1] <= obstacle.t_side()) {
 				ball.move(yball_fix);
 				ball_velocity = ball_velocity * vec4(1, -1, 1, 1);
 				printf("Collision 2: Obstacle top/ball center... %f, %f\n", ball_velocity[0], ball_velocity[1]);
 			}
-			else if (obstacle.b_side() + 0.03f >= new_pos[1] && new_pos[1] >= obstacle.b_side()) {
+			else if (obstacle.b_side() + 0.03f >= ball.pos()[1] && ball.pos()[1] >= obstacle.b_side()) {
 				ball.move(-yball_fix);
 				ball_velocity = ball_velocity * vec4(1, -1, 1, 1);
 				printf("Collision 2: Obstacle bottom/ball center... %f, %f\n", ball_velocity[0], ball_velocity[1]);
 			}
-			else if (obstacle.l_side() + 0.025f >= new_pos[0] && new_pos[0] >= obstacle.l_side() && new_pos[1] > obstacle.b_side() + 0.03f && new_pos[1] < obstacle.t_side() - 0.03f ){
+			else if (obstacle.l_side() + 0.025f >= ball.pos()[0] && ball.pos()[0] >= obstacle.l_side() && ball.pos()[1] > obstacle.b_side() + 0.03f && ball.pos()[1] < obstacle.t_side() - 0.03f ){
 				ball.move(-xball_fix);
 				ball_velocity = ball_velocity * vec4(-1, 1, 1, 1);
 				printf("Collision 2: Obstacle left/ball center... %f, %f\n", ball_velocity[0], ball_velocity[1]);
 			}
-			else if (obstacle.r_side() - 0.025f <= new_pos[0] && new_pos[0] <= obstacle.r_side() && new_pos[1] > obstacle.b_side() + 0.03f && new_pos[1] < obstacle.t_side() - 0.03f ){
+			else if (obstacle.r_side() - 0.025f <= ball.pos()[0] && ball.pos()[0] <= obstacle.r_side() && ball.pos()[1] > obstacle.b_side() + 0.03f && ball.pos()[1] < obstacle.t_side() - 0.03f ){
 				ball.move(xball_fix);
 				ball_velocity = ball_velocity * vec4(-1, 1, 1, 1);
 				printf("Collision 2: Obstacle right/ball center... %f, %f\n", ball_velocity[0], ball_velocity[1]);
 			}
 		}
 
+		//Brick Collisions
+	for (int i = 0; i <= brick_num; ++i) {
+	if (ball.intersects(brick[i])) { 
+		if (brick[i].t_side() >= ball.b_side() && ball.pos()[1] > brick[i].t_side()) {
+			ball_velocity = ball_velocity * vec4(1, -1, 1, 1);
+			printf("Collision 3: Brick top... %f, %f\n", ball_velocity[0], ball_velocity[1]);
+			brick_dead[i] = true;
+
+		}
+		else if (brick[i].b_side() <= ball.t_side() && ball.pos()[1] < brick[i].b_side()) {
+			ball_velocity = ball_velocity * vec4(1, -1, 1, 1);
+			printf("Collision 3: Brick bottom... %f, %f\n", ball_velocity[0], ball_velocity[1]);
+			brick_dead[i] = true;
+		}
+		else if (brick[i].l_side() <= ball.r_side() && ball.pos()[0] < brick[i].l_side()) {
+			ball_velocity = ball_velocity * vec4(-1, 1, 1, 1);
+			printf("Collision 3: Brick left... %f, %f\n", ball_velocity[0], ball_velocity[1]);
+			brick_dead[i] = true;
+		}
+		else if (brick[i].r_side() >= ball.l_side() && ball.pos()[0] > brick[i].r_side()) {
+			ball_velocity = ball_velocity * vec4(-1, 1, 1, 1);
+			printf("Collision 3: Brick right... %f, %f\n", ball_velocity[0], ball_velocity[1]);
+			brick_dead[i] = true;
+		}
+	}
+	}
+	for (int i = 0; i <= brick_num; ++i) {
+	if (brick[i].pos()[1] < 1){
+		brick_onscreen[i] = true;
+	}
+	}
+	for (int i = 0; i <= brick_num; ++i) {
+	if (brick[i].pos()[1] > 1){
+		brick_onscreen[i] = false;
+	}
+	}
+
+	for (int i = 0; i <= brick_num; ++i) {
+	if (brick_dead[i] == true && brick_onscreen[i] == true){
+		brick[i].move(brick_kill);
+	}
+	}
   }
 
   // simulation for the game
@@ -375,6 +425,8 @@ class NewPongGame
     }
   }
   
+
+
   // simulate and draw the game world every frame
   void render() {
     simulate();
@@ -416,14 +468,30 @@ class NewPongGame
 
 	//make the center obstacle
 	float obstacle_hx = 0.05f;
-	float obstacle_hy = 0.4f;
+	float obstacle_hy = 0.3f;
 	obstacle.init(0.0f, 1.1f, obstacle_hx,obstacle_hy);
 
 	//make bricks
 	float brick_hx = 0.05f;
-	float brick_hy = 0.25f;
-    
-    // set up a simple shader to render the emissve color
+	float brick_hy = 0.15f;
+	//Upper left
+    brick[1].init(-0.15f, 0.8f, brick_hx, brick_hy);
+	brick[0].init(-0.30f, 0.8f, brick_hx, brick_hy);
+	brick[2].init(-0.15f, 0.45f, brick_hx, brick_hy);
+	//Upper right
+	brick[3].init(0.15f, 0.8f, brick_hx, brick_hy);
+	brick[4].init(0.30f, 0.8f, brick_hx, brick_hy);
+	brick[5].init(0.15f, 0.45f, brick_hx, brick_hy);
+	//lower left
+	brick[8].init(-0.15f, -0.8f, brick_hx, brick_hy);
+	brick[7].init(-0.30f, -0.8f, brick_hx, brick_hy);
+	brick[6].init(-0.15f, -0.45f, brick_hx, brick_hy);
+	//lower right
+	brick[10].init(0.15f, -0.8f, brick_hx, brick_hy);
+	brick[11].init(0.30f, -0.8f, brick_hx, brick_hy);
+	brick[9].init(0.15f, -0.45f, brick_hx, brick_hy);
+
+    // set up a sim(ple shader to render the emissve color
     colour_shader_.init(
       // just copy the position attribute to gl_Position
       "attribute vec4 pos;"
