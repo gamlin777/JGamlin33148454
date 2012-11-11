@@ -28,17 +28,18 @@
 #include "include/matrix.h"
 
 
-// shader wrapper
+// shader wrapper & other graphics resources
 #include "include/shader.h"
 #include "include/shadertex.h"
 #include <file_manager.h>
 #include <texture_manager.h>
+GLuint background;
 
 // random number generation
 #include <ctime>
 #include <cstdlib>
 
-GLuint background;
+
 
 // Arrow Key Setup
 bool* key_special_states = new bool[246];
@@ -213,11 +214,12 @@ class NewPongGame
 	}
   }
 
-  // called when someone scores
+   // called when someone scores
   void adjust_score(int player) {
     scores[player]++;
-    if (scores[player] > 10) {
+    if (scores[player] > 5) {
       state = state_end;
+	  printf("Thank you for playing!\7\7\7\n\n");
     } else
     {
       server = 1 - player;
@@ -260,10 +262,10 @@ class NewPongGame
    // Opponent AI (Keep)
 	bat_ai = vec4(0, 0.02f, 0, 0);
 
-	if (new_pos[1] >= bats[1].pos()[1]) {
+	if (new_pos[1] >= bats[1].pos()[1] && bats[1].t_side() <= 1) {
 		bats[1].move(bat_ai);
 	}
-	if (new_pos[1] <= bats[1].pos()[1]) {
+	if (new_pos[1] <= bats[1].pos()[1] && bats[1].b_side() >= -1) {
 		bats[1].move(-bat_ai);
 	}
 	
@@ -281,7 +283,8 @@ class NewPongGame
       // right to left
       if (new_pos[0] > 1) {
         adjust_score(0);
-	for (int i = 0; i <= brick_num; ++i) {
+		//reset bricks
+	for (int i = 0; i <= brick_num; ++i) { 
 	 if (brick[i].pos()[1] > 1){
 		brick[i].move(-brick_kill);
 		brick_dead[i] = false;
@@ -295,6 +298,7 @@ class NewPongGame
       // left to right
       if (new_pos[0] < -1) {
         adjust_score(1);
+		//reset bricks
 	for (int i = 0; i <= brick_num; ++i) {
 	 if (brick[i].pos()[1] > 1){
 		brick[i].move(-brick_kill);
@@ -311,70 +315,50 @@ class NewPongGame
 		collision_1_test = false;
 	}
 
-	if (ball.pos()[0] < obstacle.r_side() && ball.pos()[0] > obstacle.l_side() && ball.pos()[1] > obstacle.b_side() && ball.pos()[1] < obstacle.t_side() ){
-		collision_1_test = false;
-	}
-	if (ball.r_side() < obstacle.r_side() && ball.r_side() > obstacle.l_side() && ball.r_side() > obstacle.b_side() && ball.r_side() < obstacle.t_side() ){
-		collision_1_test = false;
-	}
-	if (ball.l_side() < obstacle.r_side() && ball.l_side() > obstacle.l_side() && ball.l_side() > obstacle.b_side() && ball.l_side() < obstacle.t_side() ){
-		collision_1_test = false;
-	}
-	if (ball.t_side() < obstacle.r_side() && ball.t_side() > obstacle.l_side() && ball.t_side() > obstacle.b_side() && ball.t_side() < obstacle.t_side() ){
-		collision_1_test = false;
-	}
-	if (ball.b_side() < obstacle.r_side() && ball.b_side() > obstacle.l_side() && ball.b_side() > obstacle.b_side() && ball.b_side() < obstacle.t_side() ){
-		collision_1_test = false;
-	}
-
 	// bounces on center obstacle
 	if (ball.intersects(obstacle)) {
 		if (obstacle.t_side() >= ball.b_side() && new_pos[1] > obstacle.t_side() && collision_1_test == false) {
 			ball_velocity = ball_velocity * vec4(1, -1, 1, 1);
-			printf("Collision 1: Obstacle top... %f, %f\n", ball_velocity[0], ball_velocity[1]);
 			collision_1_test = true;
 		}
 		else if (obstacle.b_side() <= ball.t_side() && new_pos[1] < obstacle.b_side() && collision_1_test == false) {
 			ball_velocity = ball_velocity * vec4(1, -1, 1, 1);
-			printf("Collision 1: Obstacle bottom... %f, %f\n", ball_velocity[0], ball_velocity[1]);
 			collision_1_test = true;
 		}
 			else if (obstacle.l_side() <= ball.r_side() && new_pos[0] < obstacle.l_side() && ball.r_side() < obstacle.t_side() - 0.02f && ball.r_side() > obstacle.b_side() + 0.02f && collision_1_test == false) {
 			ball_velocity = ball_velocity * vec4(-1, 1, 1, 1);
-			printf("Collision 1: Obstacle left... %f, %f\n", ball_velocity[0], ball_velocity[1]);
 			collision_1_test = true;
 		}
 		else if (obstacle.r_side() >= ball.l_side() && new_pos[0] > obstacle.r_side() && ball.l_side() < obstacle.t_side() - 0.02f && ball.l_side() > obstacle.b_side() + 0.02f && collision_1_test == false) {
 			ball_velocity = ball_velocity * vec4(-1, 1, 1, 1);
-			printf("Collision 1: Obstacle right... %f, %f\n", ball_velocity[0], ball_velocity[1]);
 			collision_1_test = true;
 		}
 	}
 
-	//Obstacle Collision failsafe - checks if ball is within the 'frame' of the obstacle
+		//Obstacle Collision failsafe - checks if ball is within the 'frame' of the obstacle
 	vec4 xball_fix(0.05f, 0, 0, 0);
 	vec4 yball_fix(0, 0.05f, 0, 0);
 
-		if (ball.intersects(obstacle)) { 
+		if (ball.intersects(obstacle) && collision_1_test == false) { 
 			if (obstacle.t_side() - 0.03f <= ball.pos()[1] && ball.pos()[1] <= obstacle.t_side()) {
+				collision_1_test = false;
 				ball.move(yball_fix);
 				ball_velocity = ball_velocity * vec4(1, -1, 1, 1);
-				printf("Collision 2: Obstacle top/ball center... %f, %f\n", ball_velocity[0], ball_velocity[1]);
 			}
 			else if (obstacle.b_side() + 0.03f >= ball.pos()[1] && ball.pos()[1] >= obstacle.b_side()) {
+				collision_1_test = false;
 				ball.move(-yball_fix);
 				ball_velocity = ball_velocity * vec4(1, -1, 1, 1);
-				printf("Collision 2: Obstacle bottom/ball center... %f, %f\n", ball_velocity[0], ball_velocity[1]);
 			}
 			else if (obstacle.l_side() + 0.025f >= ball.pos()[0] && ball.pos()[0] >= obstacle.l_side() && ball.pos()[1] > obstacle.b_side() + 0.03f && ball.pos()[1] < obstacle.t_side() - 0.03f ){
+				collision_1_test = false;
 				ball.move(-xball_fix);
 				ball_velocity = ball_velocity * vec4(-1, 1, 1, 1);
-				printf("Collision 2: Obstacle left/ball center... %f, %f\n", ball_velocity[0], ball_velocity[1]);
 			}
 			else if (obstacle.r_side() - 0.025f <= ball.pos()[0] && ball.pos()[0] <= obstacle.r_side() && ball.pos()[1] > obstacle.b_side() + 0.03f && ball.pos()[1] < obstacle.t_side() - 0.03f ){
+				collision_1_test = false;
 				ball.move(xball_fix);
 				ball_velocity = ball_velocity * vec4(-1, 1, 1, 1);
-				printf("Collision 2: Obstacle right/ball center... %f, %f\n", ball_velocity[0], ball_velocity[1]);
 			}
 		}
 
@@ -383,23 +367,19 @@ class NewPongGame
 	if (ball.intersects(brick[i])) { 
 		if (brick[i].t_side() >= ball.b_side() && ball.pos()[1] > brick[i].t_side()) {
 			ball_velocity = ball_velocity * vec4(1, -1, 1, 1);
-			printf("Collision 3: Brick top... %f, %f\n", ball_velocity[0], ball_velocity[1]);
 			brick_dead[i] = true;
 
 		}
 		else if (brick[i].b_side() <= ball.t_side() && ball.pos()[1] < brick[i].b_side()) {
 			ball_velocity = ball_velocity * vec4(1, -1, 1, 1);
-			printf("Collision 3: Brick bottom... %f, %f\n", ball_velocity[0], ball_velocity[1]);
 			brick_dead[i] = true;
 		}
 		else if (brick[i].l_side() <= ball.r_side() && ball.pos()[0] < brick[i].l_side()) {
 			ball_velocity = ball_velocity * vec4(-1, 1, 1, 1);
-			printf("Collision 3: Brick left... %f, %f\n", ball_velocity[0], ball_velocity[1]);
 			brick_dead[i] = true;
 		}
 		else if (brick[i].r_side() >= ball.l_side() && ball.pos()[0] > brick[i].r_side()) {
 			ball_velocity = ball_velocity * vec4(-1, 1, 1, 1);
-			printf("Collision 3: Brick right... %f, %f\n", ball_velocity[0], ball_velocity[1]);
 			brick_dead[i] = true;
 		}
 	}

@@ -1,4 +1,4 @@
-﻿Build started 11/11/2012 20:19:04.
+﻿Build started 11/11/2012 22:18:14.
      1>Project "C:\Users\James\Documents\GitHub\JGamlin33148454\new_pong\new_pong.vcxproj" on node 2 (build target(s)).
      1>InitializeBuildStatus:
          Creating "Debug\new_pong.unsuccessfulbuild" because "AlwaysCreate" was specified.
@@ -9,7 +9,7 @@
                  a:\programs\visual basic 2010\vc\include\stdio.h(234) : see declaration of 'fopen'
      1>c:\users\james\documents\github\jgamlin33148454\new_pong\include\file_manager.h(46): warning C4996: 'strcpy': This function or variable may be unsafe. Consider using strcpy_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
                  a:\programs\visual basic 2010\vc\include\string.h(105) : see declaration of 'strcpy'
-     1>c:\users\james\documents\github\jgamlin33148454\new_pong\my_pong.cpp(236): warning C4244: '=' : conversion from 'int' to 'float', possible loss of data
+     1>c:\users\james\documents\github\jgamlin33148454\new_pong\my_pong.cpp(238): warning C4244: '=' : conversion from 'int' to 'float', possible loss of data
        ManifestResourceCompile:
          All outputs are up-to-date.
        Link:
@@ -28,4 +28,4 @@
 
 Build succeeded.
 
-Time Elapsed 00:00:00.81
+Time Elapsed 00:00:01.16
