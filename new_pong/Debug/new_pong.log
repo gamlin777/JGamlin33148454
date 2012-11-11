@@ -1,11 +1,15 @@
-﻿Build started 11/11/2012 17:30:19.
+﻿Build started 11/11/2012 20:19:04.
      1>Project "C:\Users\James\Documents\GitHub\JGamlin33148454\new_pong\new_pong.vcxproj" on node 2 (build target(s)).
      1>InitializeBuildStatus:
-         Touching "Debug\new_pong.unsuccessfulbuild".
+         Creating "Debug\new_pong.unsuccessfulbuild" because "AlwaysCreate" was specified.
        ClCompile:
          a:\Programs\Visual Basic 2010\VC\bin\CL.exe /c /Iinclude /ZI /nologo /W3 /WX- /Od /Oy- /D WIN32 /D _DEBUG /D _CONSOLE /D _UNICODE /D UNICODE /Gm /EHsc /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Fo"Debug\\" /Fd"Debug\vc100.pdb" /Gd /TP /analyze- /errorReport:prompt my_pong.cpp
          my_pong.cpp
-     1>c:\users\james\documents\github\jgamlin33148454\new_pong\my_pong.cpp(228): warning C4244: '=' : conversion from 'int' to 'float', possible loss of data
+     1>c:\users\james\documents\github\jgamlin33148454\new_pong\include\file_manager.h(33): warning C4996: 'fopen': This function or variable may be unsafe. Consider using fopen_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+                 a:\programs\visual basic 2010\vc\include\stdio.h(234) : see declaration of 'fopen'
+     1>c:\users\james\documents\github\jgamlin33148454\new_pong\include\file_manager.h(46): warning C4996: 'strcpy': This function or variable may be unsafe. Consider using strcpy_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+                 a:\programs\visual basic 2010\vc\include\string.h(105) : see declaration of 'strcpy'
+     1>c:\users\james\documents\github\jgamlin33148454\new_pong\my_pong.cpp(236): warning C4244: '=' : conversion from 'int' to 'float', possible loss of data
        ManifestResourceCompile:
          All outputs are up-to-date.
        Link:
@@ -24,4 +28,4 @@
 
 Build succeeded.
 
-Time Elapsed 00:00:00.74
+Time Elapsed 00:00:00.81

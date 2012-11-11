@@ -21,19 +21,24 @@
 // standard C headers
 #include <stdio.h>
 #include <math.h>
+#include <assert.h>
 
 // math support
 #include "include/vector.h"
 #include "include/matrix.h"
 
+
 // shader wrapper
 #include "include/shader.h"
+#include "include/shadertex.h"
+#include <file_manager.h>
+#include <texture_manager.h>
 
 // random number generation
 #include <ctime>
 #include <cstdlib>
 
-
+GLuint background;
 
 // Arrow Key Setup
 bool* key_special_states = new bool[246];
@@ -140,6 +145,7 @@ class NewPongGame
   shader colour_shader_;
   GLint viewport_width_;
   GLint viewport_height_;
+  shadertex texture_shader_;
   
   // input
   char keys[256];
@@ -149,10 +155,12 @@ class NewPongGame
   float court_size() { return 0.98f; }              
   float ball_speed() { return 0.01f; }
 
+
+
   void draw_world(shader &shader)
   {
     ball.draw(shader);
-    
+ 
     for (int player = 0; player != 2; ++player)
 	{
       // draw the bat
@@ -347,7 +355,7 @@ class NewPongGame
 	vec4 xball_fix(0.05f, 0, 0, 0);
 	vec4 yball_fix(0, 0.05f, 0, 0);
 
-		if (ball.intersects(obstacle) && collision_1_test == false) { 
+		if (ball.intersects(obstacle)) { 
 			if (obstacle.t_side() - 0.03f <= ball.pos()[1] && ball.pos()[1] <= obstacle.t_side()) {
 				ball.move(yball_fix);
 				ball_velocity = ball_velocity * vec4(1, -1, 1, 1);
@@ -429,13 +437,33 @@ class NewPongGame
 
   // simulate and draw the game world every frame
   void render() {
-    simulate();
+     simulate();
 
     // clear the frame buffer and the depth
-    glClearColor(0, 0, 0, 1);                // Background color (when cleared)
+    glClearColor(0, 0, 0, 1);
     glViewport(0, 0, viewport_width_, viewport_height_);
     glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
-    
+    glActiveTexture(GL_TEXTURE0);
+	glEnable(GL_TEXTURE_2D);
+    glBindTexture(GL_TEXTURE_2D, background);
+	texture_shader_.render();
+
+	float vertices[4*4] = {
+      -10.0f,-10.0f,0,0,
+       10.0f,-10.0f,1,0,
+       10.0f,10.0f,1,1,
+      -10.0f,10.0f,0,1
+    };
+
+	glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4*sizeof(float), (void*)vertices );
+    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 4*sizeof(float), (void*)(vertices + 2) );
+    glEnableVertexAttribArray(0);
+    glEnableVertexAttribArray(2);
+
+    // kick the draw
+    glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
+
+
     draw_world(colour_shader_);
 
     // swap buffers so that the image is displayed.
@@ -500,7 +528,22 @@ class NewPongGame
       // just copy the color attribute to gl_FragColor
       "uniform vec4 emissive_color;"
       "void main() { gl_FragColor = emissive_color; }"
+
     );
+	// set up a simple shader to render the emissve color
+    texture_shader_.init(
+      // just copy the position attribute to gl_Position
+      "varying vec2 uv_;"
+      "attribute vec3 pos;"
+      "attribute vec2 uv;"
+      "void main() { gl_Position = vec4(pos * 0.05, 1); uv_ = uv; }",
+
+      // just copy the color attribute to gl_FragColor
+      "varying vec2 uv_;"
+      "uniform sampler2D texture;"
+      "void main() { gl_FragColor = texture2D(texture, uv_); }"
+      //"void main() { gl_FragColor = vec4(1, 0, 0, 1); }"
+	  );
   }
   
   // The viewport defines the drawing area in the window
@@ -538,7 +581,8 @@ int main(int argc, char **argv) // boilerplate to run the sample
   glutInitWindowSize(500, 500);
   glutCreateWindow("James Gamlin's Pong");
 
-  
+  background = texture_manager::new_texture("texture.tga", 0, 0, 256, 256);
+
   #ifdef WIN32
     glewInit();
     if (!glewIsSupported("GL_VERSION_2_0") )
