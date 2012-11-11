@@ -132,7 +132,6 @@ class NewPongGame
   int scores[2];
   bool obstacle_switch;
 
-    
   // rendering  
   shader colour_shader_;
   GLint viewport_width_;
@@ -168,7 +167,7 @@ class NewPongGame
         blob.init(blob_offset + blob_spacing / 2 * i, 0.98f, blob_size / 2, blob_size);
         blob.draw(shader);
       }
-    }
+    } 
   }
   
   void move_bats() {
@@ -254,7 +253,17 @@ class NewPongGame
     vec4 new_pos = ball.pos() + ball_velocity;
     ball.set_pos(new_pos);
 
-    // bounce
+   // Opponent AI
+	bat_ai = vec4(0, 0.02f, 0, 0);
+
+	if (new_pos[1] >= bats[1].pos()[1]) {
+		bats[1].move(bat_ai);
+	}
+	if (new_pos[1] <= bats[1].pos()[1]) {
+		bats[1].move(-bat_ai);
+	}
+	
+	// bounce
     if (
       ball_velocity[1] > 0 && new_pos[1] > court_size() ||
       ball_velocity[1] < 0 && new_pos[1] <- court_size()
