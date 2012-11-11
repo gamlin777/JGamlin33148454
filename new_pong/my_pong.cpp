@@ -33,6 +33,7 @@
 #include <ctime>
 #include <cstdlib>
 
+bool collision_1_test; 
 
 // Arrow Key Setup
 bool* key_special_states = new bool[246];
@@ -95,7 +96,6 @@ public:
   float t_side() const {return center_[1] + half_extents_[1];}
   float b_side() const {return center_[1] - half_extents_[1];}
 
-  
   // return true if two boxes intersect
   bool intersects(const box &rhs) {
     vec4 diff = (rhs.pos() - pos()).abs();
@@ -121,9 +121,12 @@ class NewPongGame
   box bats[2];
   box ball;
   box obstacle;
+  box brick[12];
   vec4 ball_velocity;
   vec4 bat_ai;
+  vec4 move_obstacle;
   int scores[2];
+  bool obstacle_switch;
 
     
   // rendering  
@@ -148,6 +151,7 @@ class NewPongGame
       // draw the bat
       bats[player].draw(shader);
       obstacle.draw(shader);
+	  brick[12].draw(shader);
 
       box blob;									//score sizing & position
       float blob_size = 0.02f;
@@ -162,6 +166,8 @@ class NewPongGame
       }
     }
   }
+
+
   
   void move_bats() {
     // look at the keys and move the bats
@@ -183,7 +189,24 @@ class NewPongGame
 	if (ball.pos()[1] <= bats[1].pos()[1]) {
 		bats[1].move(-bat_ai);
 	}
+	  // Move obstacle
+  move_obstacle = vec4(0, 0.01f, 0, 0);
+
+	if (obstacle.t_side() >= 1){
+		obstacle_switch = true;
+	}
+	if (obstacle.b_side() <= -1){
+		obstacle_switch = false;
+	}
+	if (obstacle_switch == true){
+		obstacle.move(-move_obstacle);
+	}
+	if (obstacle_switch == false){
+		obstacle.move(move_obstacle);
+	}
   }
+
+
   
   // called when someone scores
   void adjust_score(int player) {
@@ -242,33 +265,56 @@ class NewPongGame
     //   this would lead to a feedback loop.
     if (ball_velocity[0] > 0) {
       // right to left
-      if (new_pos[0] > 1) { // Greater than x1
-        adjust_score(0);
+      if (new_pos[0] > 1) {
+        adjust_score(0);		// player[0] scores
       }
       if (ball.intersects(bats[1])) {
 		ball_velocity = ball_velocity * vec4(-1.03f, 1.03f, 1, 1);
       }
+			ball_velocity = ball_velocity * vec4(-1.1f, 1.1f, 1, 1);
+	  }
     } else {
       // left to right
-      if (new_pos[0] < -1) { // Less than x-1
-        adjust_score(1);
+      if (new_pos[0] < -1) { 
+        adjust_score(1);		// player [1] scores
       }
       if (ball.intersects(bats[0])) {
 		ball_velocity = ball_velocity * vec4(-1.03f, 1.03f, 1, 1);
+			ball_velocity = ball_velocity * vec4(-1.1f, 1.1f, 1, 1);
       }
     }
-	int bounces = 0;
-		if (!ball.intersects(obstacle)) {
-			bounces = 0;
-		}
+  
+	//obstacle collisions
+	if (!ball.intersects(obstacle)) {
+		collision_1_test = false;
+	}
+
+	if (ball.pos()[0] < obstacle.r_side() && ball.pos()[0] > obstacle.l_side() && ball.pos()[1] > obstacle.b_side() && ball.pos()[1] < obstacle.t_side() ){
+		collision_1_test = false;
+	}
+	if (ball.r_side() < obstacle.r_side() && ball.r_side() > obstacle.l_side() && ball.r_side() > obstacle.b_side() && ball.r_side() < obstacle.t_side() ){
+		collision_1_test = false;
+	}
+	if (ball.l_side() < obstacle.r_side() && ball.l_side() > obstacle.l_side() && ball.l_side() > obstacle.b_side() && ball.l_side() < obstacle.t_side() ){
+		collision_1_test = false;
+	}
+	if (ball.t_side() < obstacle.r_side() && ball.t_side() > obstacle.l_side() && ball.t_side() > obstacle.b_side() && ball.t_side() < obstacle.t_side() ){
+		collision_1_test = false;
+	}
+	if (ball.b_side() < obstacle.r_side() && ball.b_side() > obstacle.l_side() && ball.b_side() > obstacle.b_side() && ball.b_side() < obstacle.t_side() ){
+		collision_1_test = false;
+	}
+
 	 // bounces on center obstacle
-	if (ball.intersects(obstacle)) { 
-		if (obstacle.t_side() >= ball.b_side() && ball.pos()[1] > obstacle.t_side()) {
+	if (ball.intersects(obstacle)) {
+		if (obstacle.t_side() >= ball.b_side() && new_pos[1] > obstacle.t_side() && collision_1_test == false) {
 			ball_velocity = ball_velocity * vec4(1, -1, 1, 1);
 			++bounces;
 			printf("Collision 1: Obstacle top... %f\n", ball_speed());
+			printf("Collision 1: Obstacle top... %f, %f\n", ball_velocity[0], ball_velocity[1]);
+			collision_1_test = true;
 		}
-		else if (obstacle.b_side() <= ball.t_side() && ball.pos()[1] < obstacle.b_side()) {
+		else if (obstacle.b_side() <= ball.t_side() && new_pos[1] < obstacle.b_side() && collision_1_test == false) {
 			ball_velocity = ball_velocity * vec4(1, -1, 1, 1);
 			++bounces;
 			printf("Collision 1: Obstacle bottom... %f\n", ball_speed());
@@ -312,6 +358,48 @@ class NewPongGame
 				printf("Collision 3: Error Fix... %f\n", ball_velocity[1]);
 			}
 		}
+			printf("Collision 1: Obstacle bottom... %f, %f\n", ball_velocity[0], ball_velocity[1]);
+			collision_1_test = true;
+		}
+		else if (obstacle.l_side() <= ball.r_side() && new_pos[0] < obstacle.l_side() && ball.r_side() < obstacle.t_side() - 0.02f && ball.r_side() > obstacle.b_side() + 0.02f && collision_1_test == false) {
+			ball_velocity = ball_velocity * vec4(-1, 1, 1, 1);
+			printf("Collision 1: Obstacle left... %f, %f\n", ball_velocity[0], ball_velocity[1]);
+			collision_1_test = true;
+		}
+		else if (obstacle.r_side() >= ball.l_side() && new_pos[0] > obstacle.r_side() && ball.l_side() < obstacle.t_side() - 0.02f && ball.l_side() > obstacle.b_side() + 0.02f && collision_1_test == false) {
+			ball_velocity = ball_velocity * vec4(-1, 1, 1, 1);
+			printf("Collision 1: Obstacle right... %f, %f\n", ball_velocity[0], ball_velocity[1]);
+			collision_1_test = true;
+		}
+	}
+
+		//Obstacle Collision failsafe - checks if ball is within the 'frame' of the obstacle
+	vec4 xball_fix(0.05f, 0, 0, 0);
+	vec4 yball_fix(0, 0.05f, 0, 0);
+
+		if (ball.intersects(obstacle) && collision_1_test == false) { 
+			if (obstacle.t_side() - 0.03f <= new_pos[1] && new_pos[1] <= obstacle.t_side()) {
+				ball.move(yball_fix);
+				ball_velocity = ball_velocity * vec4(1, -1, 1, 1);
+				printf("Collision 2: Obstacle top/ball center... %f, %f\n", ball_velocity[0], ball_velocity[1]);
+			}
+			else if (obstacle.b_side() + 0.03f >= new_pos[1] && new_pos[1] >= obstacle.b_side()) {
+				ball.move(-yball_fix);
+				ball_velocity = ball_velocity * vec4(1, -1, 1, 1);
+				printf("Collision 2: Obstacle bottom/ball center... %f, %f\n", ball_velocity[0], ball_velocity[1]);
+			}
+			else if (obstacle.l_side() + 0.025f >= new_pos[0] && new_pos[0] >= obstacle.l_side() && new_pos[1] > obstacle.b_side() + 0.03f && new_pos[1] < obstacle.t_side() - 0.03f ){
+				ball.move(-xball_fix);
+				ball_velocity = ball_velocity * vec4(-1, 1, 1, 1);
+				printf("Collision 2: Obstacle left/ball center... %f, %f\n", ball_velocity[0], ball_velocity[1]);
+			}
+			else if (obstacle.r_side() - 0.025f <= new_pos[0] && new_pos[0] <= obstacle.r_side() && new_pos[1] > obstacle.b_side() + 0.03f && new_pos[1] < obstacle.t_side() - 0.03f ){
+				ball.move(xball_fix);
+				ball_velocity = ball_velocity * vec4(-1, 1, 1, 1);
+				printf("Collision 2: Obstacle right/ball center... %f, %f\n", ball_velocity[0], ball_velocity[1]);
+			}
+		}
+
   }
 
   // simulation for the game
@@ -364,10 +452,13 @@ class NewPongGame
     float ball_hy = 0.02f;
     ball.init(0, 0, ball_hx, ball_hy);
 
-	//make the obstacle										//center obstacle details
+	//make the center obstacle
 	float obstacle_hx = 0.05f;
-	float obstacle_hy = 0.5f;
-	obstacle.init(0.0f, -0.4f, obstacle_hx,obstacle_hy);
+	float obstacle_hy = 0.4f;
+	obstacle.init(0.0f, 1.1f, obstacle_hx,obstacle_hy);
+
+	float brick_hx = 0.05f;
+	float brick_hy = 0.25f;
     
     // set up a simple shader to render the emissve color
     colour_shader_.init(
