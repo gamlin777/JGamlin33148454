@@ -423,6 +423,7 @@ class NewPongGame
     glClearColor(0, 0, 0, 1);
     glViewport(0, 0, viewport_width_, viewport_height_);
     glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
+	glDisable(GL_DEPTH_TEST);
     glActiveTexture(GL_TEXTURE0);
 	glEnable(GL_TEXTURE_2D);
     glBindTexture(GL_TEXTURE_2D, background);
